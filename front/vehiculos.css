@@ -1,0 +1,132 @@
+header {
+	 background: #22282e;
+	 height: 60px;
+	 position: relative;
+	 width: 100%;
+	 font-family: verdana,arial, helvetica, sans-serif;
+}
+ #logo {
+	 float: left;
+	 padding: 6px 30px;
+	 width: auto;
+	 height: 50px;
+}
+ #logo a {
+	 display: block;
+	 text-decoration: none;
+	 text-align: center;
+	 color: #fff;
+	 font-weight: bold;
+	 line-height: 44px;
+	 text-transform: uppercase;
+}
+ #menu {
+	 position: absolute;
+	 top: 60px;
+	 width: 100%;background: rgba(0, 108, 116, 0.74);border:3px solid #006b74;
+	 /*background-image:linear-gradient(to bottom, rgb(1,70,99), rgb(1,70,99))*/
+}
+ #menu ul {
+	 max-height: 0;
+	 overflow: hidden;
+	 margin: 0;
+	 padding: 0;
+	 list-style: none;
+	 font-size: 14px;
+}
+ #menu li {
+	 display: block;
+	 background: #33363b;
+	 text-align: center;
+	 border-bottom: 1px solid #282b30;
+}
+ #menu li a {
+	 display: block;
+	 color: #fff;
+	 text-decoration: none;
+	 line-height: 60px;
+	 padding: 0 26px;
+}
+ #menu li a:active, #menu li a:focus {
+	 color: #ffc700;
+}
+ #menu .open-menu {
+	 box-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+	 max-height: 400px;
+	 transition: max-height 0.4s ease;
+}
+ #nav-mobile {
+	 background: transparent;
+	 border: 0;
+	 cursor: pointer;
+	 float: right;
+	 width: 60px;
+	 height: 60px;
+	 position: absolute;
+	 right: 0;
+	 top: -60px;
+	 opacity: 0.6;
+}
+ #nav-mobile.nav-open {
+	 opacity: 1;
+}
+ #nav-mobile span {
+	 display: block;
+	 width: 60%;
+	 margin: 4px auto;
+	 height: 4px;
+	 background: #fff;
+}
+ @media only screen and (min-width: 768px) {
+	 #nav-mobile {
+		 display: none;
+	}
+	 #menu {
+		 width: auto;
+		 float: right;
+		 top: 0;
+		 position: relative;
+	}
+	 #menu .open-menu {
+		 box-shadow: none;
+	}
+	 #menu ul {
+		 max-height: inherit;
+	}
+	 #menu li {
+		 float: left;
+		 border: 0;
+		 background: transparent;
+	}
+	 #menu li a {
+		 display: block;
+		 color: #fff;
+		 padding: 0 26px;
+	}
+	 #menu li a:hover {
+		 color: #ffc700;
+		 background: #151a1e;
+	}
+}
+/* Content */
+ main {
+	 display: flex;
+	 min-height: 400px;
+	 color: #333;
+	 margin: 15px;
+	 align-items: center;
+	 /*background-image: linear-gradient(to right, #f78ca0 0%, #f9748f 19%, #fd868c 60%, #fe9a8b 100%);*/
+}
+ main h1 {
+	 width: 50%;
+	 text-align: center;
+}
+ 
+panelDerOcultable{
+	width:99%; margin-left:11px; margin-right:11px;
+	background: #33363b;
+	 text-align: center;
+	 border-bottom: 1px solid #282b30;
+	
+	
+}

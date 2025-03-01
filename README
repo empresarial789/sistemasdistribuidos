@@ -7,12 +7,14 @@ y son utilizados por personal policial para verificar su validez en caso de ser 
 ##ARQUITECTURA
 
 #Modelo de datos
+/modelo  contiene los modelos de datos
+
+Relaciones
 Usuario  *---1 Rol, 
 Vehiculo 1---* Tarjeton
 
 #Backend
 config.py:  tiene la configuracion de la bd
-modelo.py: tiene las clases que representan a los modelos
 sdd-api1.py: es el main donde  se exponen los endpoints
 
 #Frontend
@@ -21,6 +23,11 @@ API.js:  urls de los endpoints
 nav.js: dota de responsive a la pagina
 vehiculos.css: estilos de la pagina
 vehiculos.html: es la pagina principal
+
+##BD
+/instance
+jwedatabase.db      es la bd en sqlite
+jwedatabase.db.sql  contiene el dump de la bd con datos precargados
 
 ##BACKEND
 
