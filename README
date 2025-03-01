@@ -1,0 +1,76 @@
+##Tema: Gestión de vehículos oficiales
+
+Descripción: Se dispone de una api que permite realizar las siguientes funcionalidades(...) con el siguiente modelo de datos (...). 
+También se va a realizar el uso de la blockchain con la funcion registrarTarjeton(). Los tarjetones son los permisos que llevan los vehiculos oficiales para permitirles estacionar en cualquier lugar disponible 
+y son utilizados por personal policial para verificar su validez en caso de ser necesario.  El contrato estará formado por los siguientes datos (idVehiculo,dominio,fecha,etc...) y sera alojado en la red (...).
+
+##ARQUITECTURA
+
+#Modelo de datos
+Usuario  *---1 Rol, 
+Vehiculo 1---* Tarjeton
+
+#Backend
+config.py:  tiene la configuracion de la bd
+modelo.py: tiene las clases que representan a los modelos
+sdd-api1.py: es el main donde  se exponen los endpoints
+
+#Frontend
+jquery-3.7.1.min.js: libreria de apoyo
+API.js:  urls de los endpoints
+nav.js: dota de responsive a la pagina
+vehiculos.css: estilos de la pagina
+vehiculos.html: es la pagina principal
+
+##BACKEND
+
+Funcionalidades:
+
+-alta usuario:
+POST /v1/usuarios/registrar
+condiciones a aplicar: longitud mínima de pass 8, guardar el pass hasheado, que no exista el username, seleccionar su rol
+-login usuario:
+POST /v1/usuarios/login
+condiciones a aplicar:  máximo intentos 5 luego bloqueo de ip por 10min,
+-modificar usuario
+PUT /v1/usuarios/"idUsuario"
+condiciones: que exista el usuario y su rol
+-baja de usuario
+DELETE /v1/usuarios/"idUsuario"
+condiciones: que exista el usuario
+-obtener roles
+GET /v1/roles
+descripción: obtiene los roles posibles para seleccionar cuando se registra un nuevo usuario
+-obtener vehículos
+GET /v1/vehiculos
+descripción: obtiene los vehículos para luego a través de otra accion generar un tarjetón para el vehiculo seleccionado
+-generar tarjeton
+POST /v1/vehiculos/<idVehiculo>/generarTarjeton
+descripción: genera un contrato en la blockchain para el vehiculo seleccionado
+-verificarTarjeton: 
+GET /v1/vehiculos/"idVehiculo"
+descripción: se hace un get de la blockchain del vehiculo para obtener los datos del vehiculo y asi el agente puede verificar la validez de los datos.
+
+Perfiles:
+Admin puede acceder a los servicios:
+-alta usuario
+-login usuario
+-modificar usuario
+-baja de usuario
+-obtener roles
+-obtener vehículos
+-generar tarjeton
+-verificar tarjetón
+
+Gestor puede acceder a los servicios:
+-login usuario
+-obtener vehículos
+-generar tarjeton
+
+Oficial puede acceder a los servicios:
+-verificar tarjeton: 
+
+
+
+
+
