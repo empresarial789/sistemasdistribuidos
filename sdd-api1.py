@@ -1,5 +1,5 @@
 import json
-#from ..back import config  #aca esta la configuracion de la bd y claves
+#aca esta la configuracion de la bd y claves
 from config import db, app
 from modelo.Usuario import Usuario
 from modelo.Vehiculo import Vehiculo
@@ -8,7 +8,9 @@ from modelo.Tarjeton import Tarjeton
 
 from sqlalchemy import text
 
-from flask import request, jsonify
+import os
+import ssl
+from flask import request, jsonify, render_template
 from flask_restful import Resource, Api
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -55,7 +57,19 @@ new_Rol = Rol(nombreRol = 'Agente')
 db.session.add(new_Rol)
 
 db.session.commit()
-	
+
+#ubico los certificados para HTTPS
+base_dir = os.path.abspath(os.path.dirname(__file__))
+cert_path = os.path.join(base_dir, 'server.crt')
+key_path = os.path.join(base_dir, 'server.key')	
+assert os.path.exists(cert_path), f"server.crt no encontrado en {cert_path}"
+assert os.path.exists(key_path), f"server.key no encontrado en {key_path}"
+
+def create_ssl_context():
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(certfile=cert_path, keyfile=key_path, password='password1')
+    return context
+
 #web services endpoints
 
 '''class Register(Resource):
@@ -78,7 +92,27 @@ class ProtectedResource(Resource):
     def get(self):
         return {'message': 'Hello, SSL-protected World!'}
         
-api.add_resource(ProtectedResource, '/protected')
+#paginas devueltas SOLO a modo de prueba de la API
+@app.route('/index.html')
+def extended_page():
+    return render_template('vehiculos.html')
+@app.route('/vehiculos.css')
+def extended_page2():
+    return render_template('vehiculos.css')
+@app.route('/API.js')
+def extended_page3():
+    return render_template('API.js')
+@app.route('/General.js')
+def extended_page4():
+    return render_template('General.js')
+@app.route('/jquery-3.7.1.min.js')
+def extended_page5():
+    return render_template('jquery-3.7.1.min.js')
+@app.route('/nav.js')
+def extended_page6():
+    return render_template('nav.js')
+
+api.add_resource(ProtectedResource, '/v1/protected')
         
 '''api.add_resource(Register, '/v1/usuarios/registrar')
 api.add_resource(Login, '/v1/usuarios/login')
@@ -90,9 +124,10 @@ api.add_resource(GenerarTarjeton, '/v1/vehiculos/<int:idVehiculo>/generarTarjeto
 api.add_resource(VerificarTarjeton, '/v1/tarjetones/<int:idTarjeton>')'''
 
 if __name__ == '__main__':
+    ssl_context = create_ssl_context()
     with app.app_context():
         db.create_all()
-    app.run(host='localhost',port=5000, debug=True)
+    app.run(ssl_context=ssl_context, host='localhost',port=5000, debug=True)
     
     
     

@@ -1,11 +1,12 @@
 
 var API = {
-	endpoint1:"https://localhost:5000/v1/usuarios/registrar')",
+	endpoint1: "https://localhost:5000/v1/protected",
+	endpoint1x:"https://localhost:5000/v1/usuarios/registrar",
 	endpoint2:"https://localhost:5000/v1/usuarios/login",
 	endpoint3:"https://localhost:5000//v1/usuarios/",
 	endpoint4:"https://localhost:5000/v1/usuarios/",
 	endpoint5:"https://localhost:5000/v1/roles/",
-	endpoint6:"https://localhost:5000/v1/vehiculos/vehículos/",
+	endpoint6:"https://localhost:5000/v1/vehiculos/vehiculos/",
 	endpoint7:"https://localhost:5000/v1/vehiculos/",
 	endpoint8:"url api3",
 	endpoint9:"url api3",

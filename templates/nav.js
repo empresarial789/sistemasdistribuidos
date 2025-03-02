@@ -23,11 +23,49 @@ buttonMenu.addEventListener('click', (e) => {
 
 
 //operacion a realizar , llamado a la API
+var divMensajeStatus = document.getElementById('divMensajeStatus');
 function op(api,id,clase) {
 
     //reseteo el panel de contenido
 	Generales.mostrarPanelDerYOcultarClase(id,clase)
-	
+
+    //dependiendo de la api hago una cosa u otra
+    switch (api) {
+        case API.endpoint1:
+            divMensajeStatus.innerHTML = 'HTTPS';
+            var contenido = document.getElementById('contenido1');
+            fetch(api)
+                .then(response => {
+                    /*if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }*/
+                    return response.json();
+                })
+                .then(data => {
+                    contenido.innerHTML = data.message;
+                })
+                .catch(error => {
+                    // Handle errors
+                    //console.error('Fetch Error :-S', error);
+                });
+            break;
+        case API.endpoint2:
+            console.log("Tengo un perro");
+            break;
+        case API.endpoint3:
+            console.log("Tengo un gato");
+            break;
+        case API.endpoint4:
+            console.log("Tengo una serpiente");
+            break;
+        case API.endpoint5:
+            console.log("Tengo un loro");
+            break;
+        default:
+            console.log("No tengo mascota");
+            break;
+    }
+
 	//AQUI PONER AJAx,JQUERY o mejor FETCH .... para las llamadas asincronas a las apis*******************************************
 	
     //llamo a la api y retorno los resultados,,,,, este es solo un ejemplo con jquery
@@ -42,14 +80,14 @@ function op(api,id,clase) {
         contentType: "application/x-www-form-urlencoded; charset=utf-8",
         success: function (respuestaJson) {
             //porner el mensaje a mostrar en caso de exito en el html*****************************
-   			alert(respuestaJson);
+   			
 
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             //console.log("error en moodle url:", XMLHttpRequest, textStatus, errorThrown);
 			
 			//PONER el MENSAJE a mostrar en caso de error en el html**************************************
-			alert(textStatus);
+			
 		}               
                         
     });
