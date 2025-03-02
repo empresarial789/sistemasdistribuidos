@@ -7,7 +7,7 @@ from modelo.Rol import Rol
 from modelo.Tarjeton import Tarjeton
 
 from sqlalchemy import text
-
+from flask_httpauth import HTTPBasicAuth
 import os
 import ssl
 from flask import request, jsonify, render_template
@@ -15,6 +15,7 @@ from flask_restful import Resource, Api
 from werkzeug.security import generate_password_hash, check_password_hash
 
 api = Api(app)
+auth = HTTPBasicAuth()
 
 '''leemos la configuracion de la aplicacion, donde esta la bd y claves
 with open('config.json', 'r') as f:
@@ -72,6 +73,21 @@ def create_ssl_context():
 
 #web services endpoints
 
+users = {
+    "user1": "password1",
+    "user2": "password2"
+}
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and users[username] == password:
+        return username
+
+class Login(Resource):
+    @auth.login_required
+    def get(self):
+        return {'message': 'Usuario logueado'}, 200, {'Content-Type': 'text/plain'}
+
 '''class Register(Resource):
 
 class Login(Resource):
@@ -113,9 +129,10 @@ def extended_page6():
     return render_template('nav.js')
 
 api.add_resource(ProtectedResource, '/v1/protected')
-        
-'''api.add_resource(Register, '/v1/usuarios/registrar')
 api.add_resource(Login, '/v1/usuarios/login')
+
+'''api.add_resource(Register, '/v1/usuarios/registrar')
+
 api.add_resource(ModificarUsuario, '/v1/usuarios/<int:idUsuario>')
 api.add_resource(BajaUsuario, '/v1/usuarios/<int:idUsuario>')
 api.add_resource(Roles, '/v1/roles')
