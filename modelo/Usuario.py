@@ -9,5 +9,6 @@ class Usuario(db.Model):
     username = db.Column(db.String(40), unique=True, nullable=False)
     password = db.Column(db.String(40), nullable=False)
     idRol = db.Column(db.Integer, nullable=False) #quitar nullable si uso relaciones automaticas
+    api_key = db.Column(db.String(64), unique=True, nullable=False)
     def __repr__(self):
         return f'<Usuario {self.username}>'

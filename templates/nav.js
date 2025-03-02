@@ -1,8 +1,15 @@
 // JavaScript Version
 const buttonMenu = document.querySelector('#nav-mobile');
 const navMenu = document.querySelector('.nav-menu');
-const formularioAccess = '<form onSubmit="event.preventDefault();"><div><label for="username" style="display:inline-block; width: 100px;">Username</label><input id="username" type="text" name="username" /></div><div><label for="password" style="display:inline-block; width: 100px;">Password</label><input id="password" type="text" name="password" /></div><div id="statusLogin"></div><br/><button onclick="login()">Login</button></form >';
+const formularioAccess = '<form onSubmit="event.preventDefault();"><div><label for="username" style="display:inline-block; width: 100px;">Username</label><input id="username" type="text" name="username" /></div><div><label for="password" style="display:inline-block; width: 100px;">Password</label><input id="password" type="text" name="password" /></div><div id="statusLogin"></div><br/><button onclick="loginBasic()">Login</button></form >';
+const formularioAccessAPIKEY = '<form onSubmit="event.preventDefault();"><div><label for="username2" style="display:inline-block; width: 100px;">Username</label><input id="username2" type="text" name="username2" /></div><div><label for="password2" style="display:inline-block; width: 100px;">Password</label><input id="password2" type="text" name="password2" /></div><div id="statusLogin2"></div><br/><button onclick="registerAPIKEY()">Registro</button><button onclick="getAPIKEY()">GetAPIKEY</button><button onclick="recursoAPIKEYprotegido()">AccesoARecurso</button></form >';
+const formularioAccessJWT = '<form onSubmit="event.preventDefault();"><div><label for="username3" style="display:inline-block; width: 100px;">Username</label><input id="username3" type="text" name="username3" /></div><div><label for="password3" style="display:inline-block; width: 100px;">Password</label><input id="password3" type="text" name="password3" /></div><div id="statusLogin3"></div><br/><button onclick="getTOKENJWT()">Login</button><button onclick="recursoJWTprotegido()">AccesoARecurso</button></form >';
+
+
 //const formularioAccessx = '<form action = "" method = "post" ><div><label for="username" style="display:inline-block; width: 100px;">Username</label><input id="username" type="text" name="username" /></div><div><label for="password" style="display:inline-block; width: 100px;">Password</label><input id="password" type="text" name="password" /></div><div><label for="rol" style="display:inline-block; width: 100px;">Rol</label><select id="rol" name="rol" ><option value="1">Admin</option><option value="2">Gestor</option><option value="3">Agente</option></select></div><br/><input type="submit" value="Save" /></form >';
+var API_KEY;
+var TOKEN_JWT;
+
 buttonMenu.addEventListener('click', (e) => {
   e.currentTarget.classList.toggle('nav-open');
   navMenu.classList.toggle('open-menu');
@@ -57,10 +64,14 @@ function op(api,id,clase) {
             contenido.innerHTML = formularioAccess;
             break;
         case API.endpoint3:
-            console.log("Tengo un gato");
+            divMensajeStatus.innerHTML = 'API KEY';
+            var contenido = document.getElementById('contenido3');
+            contenido.innerHTML = formularioAccessAPIKEY;
             break;
         case API.endpoint4:
-            console.log("Tengo una serpiente");
+            divMensajeStatus.innerHTML = 'JWT TOKEN';
+            var contenido = document.getElementById('contenido4');
+            contenido.innerHTML = formularioAccessJWT;
             break;
         case API.endpoint5:
             console.log("Tengo un loro");
@@ -69,37 +80,11 @@ function op(api,id,clase) {
             console.log("No tengo mascota");
             break;
     }
-
-	//AQUI PONER AJAx,JQUERY o mejor FETCH .... para las llamadas asincronas a las apis*******************************************
-	
-    //llamo a la api y retorno los resultados,,,,, este es solo un ejemplo con jquery
-    /*$.ajax({
-		//url: 'http://localhost:43414/moodle/login/index.php?XDEBUG_SESSION_START=php2',
-        url: api,
-       // headers: { 'Authorization': "Bearer " + "mi autorizacino" },
-        type: "GET",
-        data: { "username": "mi usuario", "password": "", 'Authorization': 'miautorizacion' },
-        async: true,
-       // dataType: "html",
-        contentType: "application/x-www-form-urlencoded; charset=utf-8",
-        success: function (respuestaJson) {
-            //porner el mensaje a mostrar en caso de exito en el html*****************************
-   			
-
-        },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            //console.log("error en moodle url:", XMLHttpRequest, textStatus, errorThrown);
 			
-			//PONER el MENSAJE a mostrar en caso de error en el html**************************************
-			
-		}               
-                        
-    });*/
-					
         
 }    
 
-function login() {
+function loginBasic() {
     var contenido = document.getElementById('statusLogin');
     contenido.innerHTML = '';
     
@@ -123,13 +108,185 @@ function login() {
         })
         .catch(error => {
             var contenido = document.getElementById('statusLogin');
-            contenido.innerHTML = "Usuario invalido";
+            contenido.innerHTML = error.message;
         }); 
+
+
+}
+function registerAPIKEY() {
+    var contenido = document.getElementById('statusLogin2');
+    contenido.innerHTML = '';
+
+    let username = document.getElementById("username2").value;
+    let password = document.getElementById("password2").value;
+    let headers = new Headers();
+    headers.set('usuario', username);
+    headers.set('password', password);
+    headers.set('Content-Type', 'application/json');
+
+    fetch(API.endpoint3, {
+        method: 'POST',
+        headers: headers 
+    })
+        .then(response => {
+            /*if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }*/
+            return response.json();
+        })
+        .then(data => {
+            var contenido = document.getElementById('statusLogin2');
+            contenido.innerHTML = data.message;
+            
+        })
+        .catch(error => {
+            var contenido = document.getElementById('statusLogin2');
+            contenido.innerHTML = error.message;
+        });
+
+
+}
+
+function getAPIKEY() {
+    var contenido = document.getElementById('statusLogin2');
+    contenido.innerHTML = '';
+
+    let username = document.getElementById("username2").value;
+    let password = document.getElementById("password2").value;
+    let headers = new Headers();
+    headers.set('usuario', username);
+    headers.set('password', password); 
+    headers.set('Content-Type', 'application/json');
+
+    fetch(API.endpoint31, {
+        method: 'POST',
+        headers: headers
+    })
+        .then(response => {
+            /*if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }*/
+            return response.json();
+        })
+        .then(data => {
+            var contenido = document.getElementById('statusLogin2');
+            contenido.innerHTML = data.message;
+            API_KEY = data.api_key;
+        })
+        .catch(error => {
+            var contenido = document.getElementById('statusLogin2');
+            contenido.innerHTML = error.message;
+        });
+
+
+}
+
+function recursoAPIKEYprotegido() {
+    var contenido = document.getElementById('statusLogin2');
+    contenido.innerHTML = '';
+
+    let username = document.getElementById("username2").value;
+    let password = document.getElementById("password2").value;
+    let headers = new Headers();
+    headers.set('usuario', username);
+    headers.set('password', password);
+    headers.set('Content-Type', 'application/json');
+    headers.set('X-API-KEY', API_KEY);
+
+    fetch(API.endpoint32, {
+        method: 'GET',
+        headers: headers
+    })
+        .then(response => {
+            /*if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }*/
+            return response.json();
+        })
+        .then(data => {
+            var contenido = document.getElementById('statusLogin2');
+            contenido.innerHTML = data.message;
+        })
+        .catch(error => {
+            var contenido = document.getElementById('statusLogin2');
+            contenido.innerHTML = error.message;
+        });
 
 
 }
 
 
+//login jwt
+function getTOKENJWT() {
+    var contenido = document.getElementById('statusLogin3');
+    contenido.innerHTML = '';
+
+    let username = document.getElementById("username3").value;
+    let password = document.getElementById("password3").value;
+    let headers = new Headers();
+    headers.set('usuario', username);
+    headers.set('password', password);
+    headers.set('Content-Type', 'application/json');
+    
+    fetch(API.endpoint4, {
+        method: 'POST',
+        headers: headers
+    })
+        .then(response => {
+            /*if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }*/
+            return response.json();
+        })
+        .then(data => {
+            var contenido = document.getElementById('statusLogin3');
+            contenido.innerHTML = data.message;
+            TOKEN_JWT = data.access_token;
+        })
+        .catch(error => {
+            var contenido = document.getElementById('statusLogin3');
+            contenido.innerHTML = error.message;
+        });
+
+
+}
+
+function recursoJWTprotegido() {
+    var contenido = document.getElementById('statusLogin3');
+    contenido.innerHTML = '';
+
+    let username = document.getElementById("username3").value;
+    let password = document.getElementById("password3").value;
+    let headers = new Headers();
+    headers.set('usuario', username);
+    headers.set('password', password);
+    headers.set('Content-Type', 'application/json');
+    headers.set('Authorization', 'Bearer ' + TOKEN_JWT);
+
+    fetch(API.endpoint41, {
+        method: 'GET',
+        headers: headers
+    })
+        .then(response => {
+            /*if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }*/
+            return response.json();
+        })
+        .then(data => {
+            var contenido = document.getElementById('statusLogin3');
+            contenido.innerHTML = data.message;
+        })
+        .catch(error => {
+            var contenido = document.getElementById('statusLogin3');
+            contenido.innerHTML = error.message;
+        });
+
+
+}
+
+
+/**getTOKENJWT()">Login</button><button onclick="recursoJWTprotegido */
 
 
 
