@@ -7,7 +7,6 @@ const formularioAccessJWT = '<form onSubmit="event.preventDefault();"><div><labe
 const formularioAccessJWTROL = '<form onSubmit="event.preventDefault();"><div><label for="username4" style="display:inline-block; width: 100px;">Username</label><input id="username4" type="text" name="username4" /></div><div><label for="password4" style="display:inline-block; width: 100px;">Password</label><input id="password4" type="password"  name="password4" /></div><div id="statusLogin4"></div><br/><button onclick="getTOKENJWTROL()">Login</button><button onclick="recursoJWTprotegidoAdmin()">AccesoARecurso Admin</button><button onclick="recursoJWTprotegidoGestor()">AccesoARecurso Gestor</button><button onclick="recursoJWTprotegidoAgente()">AccesoARecurso Agente</button></form >';
 
 
-//const formularioAccessx = '<form action = "" method = "post" ><div><label for="username" style="display:inline-block; width: 100px;">Username</label><input id="username" type="text" name="username" /></div><div><label for="password" style="display:inline-block; width: 100px;">Password</label><input id="password" type="text" name="password" /></div><div><label for="rol" style="display:inline-block; width: 100px;">Rol</label><select id="rol" name="rol" ><option value="1">Admin</option><option value="2">Gestor</option><option value="3">Agente</option></select></div><br/><input type="submit" value="Save" /></form >';
 var API_KEY;
 var TOKEN_JWT;
 
@@ -76,7 +75,31 @@ function op(api,id,clase) {
             
             break;
         case API.endpoint5:
-            console.log("Tengo un loro");
+            divMensajeStatus.innerHTML = 'BLOCKCHAIN';
+            var contenido = document.getElementById('contenido5');
+            contenido.innerHTML = "Registrando tarjeton en la BLOCKCHAIN";
+            let headers2 = new Headers();
+            headers2.set('Content-Type', 'application/json');
+            headers2.set('Accept', 'application/json');
+
+            fetch(API.endpoint5, {
+                method: 'GET',
+                headers: headers2
+            })
+                .then(response => {
+                    /*if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }*/
+                    return response.json();
+                })
+                .then(data => {
+                    var contenido = document.getElementById('contenido5');
+                    contenido.innerHTML = data.message;
+                })
+                .catch(error => {
+                    var contenido = document.getElementById('contenido5');
+                    contenido.innerHTML = data.message;
+                });
             break;
         case API.endpoint6:
             divMensajeStatus.innerHTML = 'Restrict HTTP Methods';
@@ -222,7 +245,7 @@ function loginBasic() {
     headers.set('X-Requested-With', 'XMLHttpRequest');
 
     fetch(API.endpoint2,{method:'GET',
-        headers: headers, /*credentials: 'user:passwd'*/  credentials: 'include' })
+        headers: headers, credentials: 'include' })
         .then(response => {
             /*if (!response.ok) {
                 throw new Error('Network response was not ok');

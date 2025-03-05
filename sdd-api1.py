@@ -13,7 +13,7 @@ import os
 import ssl
 from flask import request, jsonify, render_template, redirect, url_for,Response, make_response, send_from_directory
 from flask_restful import Resource, Api
-from werkzeug.security import generate_password_hash, check_password_hash
+#from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
 
 import hashlib
@@ -25,10 +25,22 @@ from functools import wraps
 import logging
 from flask_cors import CORS, cross_origin
 from flask_swagger_ui import get_swaggerui_blueprint
- 
+import bcrypt
+from blockchain.interact import contratoSet
+from datetime import datetime
+
 api = Api(app)
 auth = HTTPBasicAuth()
 jwt = JWTManager(app)
+
+#funciones de encriptado para los passwords de los usuarios guardados en la BD
+def generate_password_hash(password):
+   salt =  bcrypt.gensalt()
+   hashed = bcrypt.hashpw(password.encode('utf-8'),salt)
+   return hashed
+
+def check_password_hash(store_password_hash, provided_password):
+   return bcrypt.checkpw(provided_password.encode('utf-8'),store_password_hash)
 
 '''leemos la configuracion de la aplicacion, donde esta la bd y claves
 with open('config.json', 'r') as f:
@@ -108,6 +120,7 @@ def auth_error(status):
     
     return {'message': 'Usuario invalido'}, status, {'Content-Type': 'text/plain'}
 
+
 #nota: como estamos haciendo pruebas con front embebido se deshabilito dos controles de headers
 @app.after_request
 def remove_header(response):
@@ -115,7 +128,7 @@ def remove_header(response):
     del response.headers['Www-authenticate']    
     response.headers['Cache-Control'] = 'no-store' 
     #devuelvo datos asi que no se necesita que esten en un objeto html especifico
-    response.headers['Content-Security-Policy'] = 'frame-ancestors \'none\''
+    response.headers['Content-Security-Policy'] = 'frame-ancestors \'none\' ;style-src \'self\' \'unsafe-inline\';script-src \'self\' \'unsafe-inline\';img-src \'self\';connect-src \'self\';frame-src \'self\';font-src \'self\';media-src \'self\';object-src \'self\';manifest-src \'self\';form-action \'self\''
     response.headers['X-Frame-Options'] = 'DENY'
     #siempre retorno json, LUEGO habilitar cuando la api este sin el front embebido de prueba
     #como estamos haciendo pruebas desde un cliente embebido de prueba en este caso obligo a que si hay un determinado header en la respuesta que devuelva html
@@ -123,8 +136,11 @@ def remove_header(response):
     #siempre solicito que se comuniquen con https
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
     #indico al browser que siempre use el tipo de contenido especificado y que no intente averiguarlo, LUEGO habilitar
-    #response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
 
+     
+    #del response.headers['Server'] 
+    
     return response
 
 class Login(Resource):
@@ -175,7 +191,7 @@ class GetApiKey(Resource):
         #verificar contenttype de las solicitudes
         contentType = request.headers.get('Content-Type')
         if not verificarRequestValido(CONTENT_TYPE_VALIDO,contentType):
-            return {'message': 'Tipo de contenido de solicitud invalido'}, 415,{'Content-Type': 'application/json'}
+            return {'message': 'Tipo de contenido de solicitud invalido'}, 406,{'Content-Type': 'application/json'}
         
         username = request.headers.get('usuario')
         password = request.headers.get('password')
@@ -239,6 +255,27 @@ class ProtectedResourceJWT(Resource):
     def get(self):
         current_user = get_jwt_identity()
         return {'message': f'Hola, {current_user}'}, 200
+
+###5 BLOCKCHAIN
+#contratoSet(idTarjeton,dominio, fechaRegistro, anioValidez)
+
+class RegistrarTarjeton(Resource):
+    def get(self): 
+        #verificar contenttype de las solicitudes
+        contentType = request.headers.get('Content-Type')
+        if not verificarRequestValido(CONTENT_TYPE_VALIDO,contentType):
+            return {'message': 'Tipo de contenido de solicitud invalido'}, 406,{'Content-Type': 'application/json'}
+
+        #vehiculos = Vehiculo.query.all()
+        now = datetime.now()
+        format = now.strftime('Día :%d, Mes: %m, Año: %Y, Hora: %H, Minutos: %M, Segundos: %S')
+        #ejecuto el contrato, va guardo informacion en el contrato
+        c = contratoSet('1','AG071MT', format, '2023/2024')
+
+        return {'message': f'Tarjeton Registrado en la BLOCKCHAIN (1,AG071MT,{format}, 2023/2024)'},200,{'Content-Type': 'application/json'}
+
+
+
 ###6, es una solicitud con un metodo no permitida, se retorna la respuesta default
 
 ###7
@@ -465,8 +502,6 @@ def send_static(path):
 
 
 
-
-
 '''class Register(Resource):
 
 class Login(Resource):
@@ -499,25 +534,30 @@ class ErrorCors(Resource):
 #paginas devueltas SOLO a modo de prueba de la API
 @app.route('/index.html')
 def extended_page():
-    return render_template('vehiculos.html'),200,{'Content-Typefix': 'text/html'}
+    resp = make_response(render_template('vehiculos.html'))
+    #resp.headers.set('Cache-Control','no-store')
+    #resp.headers.set('Server','')
+    return resp,200
+    
 @app.route('/')
 def extended_page0():
-    return render_template('vehiculos.html'),200,{'Content-Typefix': 'text/html'}
+    return render_template('vehiculos.html'),200
+    #return render_template('vehiculos.html'),200,{,  }
 @app.route('/vehiculos.css')
 def extended_page2():
-    return render_template('vehiculos.css')
+    return render_template('vehiculos.css'),200,{'Content-Type': 'text/css; charset=utf-8'}
 @app.route('/API.js')
 def extended_page3():
-    return render_template('API.js')
+    return render_template('API.js'),200,{'Content-Type': 'text/javascript; charset=utf-8'}
 @app.route('/General.js')
 def extended_page4():
-    return render_template('General.js')
+    return render_template('General.js'),200,{'Content-Type': 'text/javascript; charset=utf-8'}
 @app.route('/jquery-3.7.1.min.js')
 def extended_page5():
-    return render_template('jquery-3.7.1.min.js')
+    return render_template('jquery-3.7.1.min.js'),200,{'Content-Type': 'text/javascript; charset=utf-8'}
 @app.route('/nav.js')
 def extended_page6():
-    return render_template('nav.js')
+    return render_template('nav.js'),200,{'Content-Type': 'text/javascript; charset=utf-8'}
 
 api.add_resource(ProtectedResource, '/v1/protected')
 api.add_resource(ProtectedResourceAPIKEY, '/v1/usuarios/protectedapikey')
@@ -532,7 +572,7 @@ api.add_resource(ProtectedResourceJWTGestor, '/v1/usuarios/protectedjwtrolgestor
 api.add_resource(ProtectedResourceJWTAgente, '/v1/usuarios/protectedjwtrolagente')
 api.add_resource(ErrorEmitido, '/v1/errorEmitido')
 api.add_resource(ErrorCors, '/v1/cors')
-
+api.add_resource(RegistrarTarjeton, '/v1/vehiculos/registrarTarjeton') 
 
 
 '''api.add_resource(Register, '/v1/usuarios/registrar')
