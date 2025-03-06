@@ -118,7 +118,7 @@ def verify_password(username, password):
 @auth.error_handler
 def auth_error(status):
     
-    return {'message': 'Usuario invalido'}, status, {'Content-Type': 'text/plain'}
+    return {'message': 'Usuario invalido'}, status,{'Content-Type': 'application/json'}
 
 
 #nota: como estamos haciendo pruebas con front embebido se deshabilito dos controles de headers
@@ -152,9 +152,30 @@ class Login(Resource):
         #return {'message': 'Usuario logueado'}, 200, {'Content-Type': 'text/plain'}
         return {'message': 'Usuario logueado'}, 200, {'Content-Type': 'text/plain'}
 
+
+#######parte de la defincion de roles
+#defino decoradores para verificar que exista el token y que sean del rol adecuado segun el recurso que se protege
+ADMIN = 1
+GESTOR = 2
+AGENTE = 3
+def admin_required(fn):
+   @wraps(fn)
+   def wrapper(*args, **kwargs):
+      verify_jwt_in_request()
+      claims = get_jwt()
+      print(claims['roles'])
+      if claims['roles'][0] != ADMIN:
+         return {'message': 'Solo Admins'}, 403,{'Content-Type': 'application/json'}
+      else:
+         return fn(*args, **kwargs)
+   return wrapper
+
+
+######
 ####3
 #por default se registran como usuarios con rol Gestor
 class Register(Resource):
+    @admin_required
     def post(self):
         #recibo los datos en el header
         username = request.headers.get('usuario')
@@ -168,6 +189,7 @@ class Register(Resource):
         if not verificarIntervalo(LONGMININPUT, LONGMAXINPUT,password):
             return {'message': 'Password debe ser valido'}, 400,{'Content-Type': 'application/json'}
 
+        logger.debug(f"POST se intenta registrar un usuario con nombre: {username}")
         #rol = request.headers.get('rol')
         rol = 2
 
@@ -175,15 +197,16 @@ class Register(Resource):
             return {'message': 'Username y password son requeridos'}, 400,{'Content-Type': 'application/json'}
         
         if Usuario.query.filter_by(username=username).first():
-            return {'message': 'Username ya existe'}, 400
+            return {'message': 'Username ya existe'}, 400,{'Content-Type': 'application/json'}
         
         api_key = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()        
         hashed_password = generate_password_hash(password)
         new_user = Usuario(username=username, password=hashed_password,idRol = rol, api_key=api_key)
         db.session.add(new_user)
         db.session.commit()
-        
-        return {'message': 'Usuario registrado exitosamente', 'api_key': api_key}, 201
+        logger.debug(f"POST se registro correctamente un usuario con nombre: {username}")
+
+        return {'message': 'Usuario registrado exitosamente', 'api_key': api_key}, 201,{'Content-Type': 'application/json'}
 
 #obtengo el apikey de un usuario
 class GetApiKey(Resource):
@@ -197,39 +220,39 @@ class GetApiKey(Resource):
         password = request.headers.get('password')
         
         if not username or not password:
-            return {'message': 'Usuario y password son requeridos'}, 400
+            return {'message': 'Usuario y password son requeridos'}, 400,{'Content-Type': 'application/json'}
 
         #sanitizacion de entradas
         if not sanitizacion(LONGMAXINPUT,username):
-            return {'message': 'Username debe ser valido y debe tener una longitud valida'}, 400
+            return {'message': 'Username debe ser valido y debe tener una longitud valida'}, 400,{'Content-Type': 'application/json'}
         if not sanitizacion(LONGMAXINPUT,password):
-            return {'message': 'Password debe ser valido y debe tener una longitud valida'}, 400
+            return {'message': 'Password debe ser valido y debe tener una longitud valida'}, 400,{'Content-Type': 'application/json'}
 
         user = Usuario.query.filter_by(username=username).first()
         if not user or not check_password_hash(user.password, password):
-            return {'message': 'User name o password invalidos'}, 401
+            return {'message': 'User name o password invalidos'}, 401,{'Content-Type': 'application/json'}
         
         mi_api_key = user.api_key #hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
         user.api_key = mi_api_key
         db.session.commit()
         
-        return {'message': 'API key devuelto exitosamente', 'api_key': mi_api_key}, 200
+        return {'message': 'API key devuelto exitosamente', 'api_key': mi_api_key}, 200,{'Content-Type': 'application/json'}
 
 class ProtectedResourceAPIKEY(Resource):
     def get(self):
         api_key = request.headers.get('X-API-KEY')
         #sanitizacion de entradas
         if not sanitizacion(LONGMAXINPUT,api_key):
-            return {'message': 'Username debe ser valido y debe tener una longitud valida'}, 400
+            return {'message': 'Username debe ser valido y debe tener una longitud valida'}, 400,{'Content-Type': 'application/json'}
 
         if not api_key:
-            return {'message': 'API key no recibido'}, 401
+            return {'message': 'API key no recibido'}, 401,{'Content-Type': 'application/json'}
         
         user = Usuario.query.filter_by(api_key=api_key).first()
         if not user:
-            return {'message': 'API key invalido'}, 403
+            return {'message': 'API key invalido'}, 403,{'Content-Type': 'application/json'}
         
-        return {'message': f'Hola, {user.username}'}, 200
+        return {'message': f'Hola, {user.username}'}, 200,{'Content-Type': 'application/json'}
 
 ####4 JWT
 class LoginJWT(Resource):
@@ -238,23 +261,23 @@ class LoginJWT(Resource):
         password = request.headers.get('password')
 
         if not username or not password:
-            return {'message': 'Username y password son requeridos'}, 400
+            return {'message': 'Username y password son requeridos'}, 400,{'Content-Type': 'application/json'}
         
         user = Usuario.query.filter_by(username=username).first()
         if not user or not check_password_hash(user.password, password):
-            return {'message': 'Username o password invalido'}, 401
+            return {'message': 'Username o password invalido'}, 401,{'Content-Type': 'application/json'}
         
         # Creo el objeto de payload que estara en el token
         user = UserObjectJWT(username=username, roles=[user.idRol])
         access_token = create_access_token(user)
-        return {'message': 'Usuario logeado','access_token': access_token}, 200
+        return {'message': 'Usuario logeado','access_token': access_token}, 200,{'Content-Type': 'application/json'}
 
 #recurso solo protegido por existencia de u token jwt valido
 class ProtectedResourceJWT(Resource):
     @jwt_required()
     def get(self):
         current_user = get_jwt_identity()
-        return {'message': f'Hola, {current_user}'}, 200
+        return {'message': f'Hola, {current_user}'}, 200,{'Content-Type': 'application/json'}
 
 ###5 BLOCKCHAIN
 #contratoSet(idTarjeton,dominio, fechaRegistro, anioValidez)
@@ -271,7 +294,7 @@ class RegistrarTarjeton(Resource):
         format = now.strftime('Día :%d, Mes: %m, Año: %Y, Hora: %H, Minutos: %M, Segundos: %S')
         #ejecuto el contrato, va guardo informacion en el contrato
         c = contratoSet('1','AG071MT', format, '2023/2024')
-
+        logger.debug("GET se registro correctamente un tarjeton")
         return {'message': f'Tarjeton Registrado en la BLOCKCHAIN (1,AG071MT,{format}, 2023/2024)'},200,{'Content-Type': 'application/json'}
 
 
@@ -331,22 +354,6 @@ def user_identity_lookup(user):
    return user.username
 
 
-#defino decoradores para verificar que exista el token y que sean del rol adecuado segun el recurso que se protege
-ADMIN = 1
-GESTOR = 2
-AGENTE = 3
-def admin_required(fn):
-   @wraps(fn)
-   def wrapper(*args, **kwargs):
-      verify_jwt_in_request()
-      claims = get_jwt()
-      print(claims['roles'])
-      if claims['roles'][0] != ADMIN:
-         return {'message': 'Solo Admins'}, 403
-      else:
-         return fn(*args, **kwargs)
-   return wrapper
-
 def gestor_required(fn):
    @wraps(fn)
    def wrapper(*args, **kwargs):
@@ -354,7 +361,7 @@ def gestor_required(fn):
       claims = get_jwt()
       print(claims['roles'])
       if claims['roles'][0] != GESTOR:
-         return {'message': 'Solo Gestores'}, 403
+         return {'message': 'Solo Gestores'}, 403,{'Content-Type': 'application/json'}
       else:
          return fn(*args, **kwargs)
    return wrapper
@@ -366,11 +373,12 @@ def agente_required(fn):
       claims = get_jwt()
       print(claims['roles'])
       if claims['roles'][0] != AGENTE:
-         return {'message': 'Solo Agentes'}, 403
+         return {'message': 'Solo Agentes'}, 403,{'Content-Type': 'application/json'}
       else:
          return fn(*args, **kwargs)
    return wrapper
 
+#recurso accedido por todos los roles
 class LoginJWTROL(Resource):
     def post(self):
       try:        
@@ -384,48 +392,49 @@ class LoginJWTROL(Resource):
         password = request.headers.get('password')
         
         if not username or not password:
-            return {'message': 'Usuario y password son requeridos'}, 400
+            return {'message': 'Usuario y password son requeridos'}, 400,{'Content-Type': 'application/json'}
 
         #sanitizacion de entradas
         if not sanitizacion(LONGMAXINPUT,username):
-            return {'message': 'Username debe ser valido y debe tener una longitud valida'}, 400
+            return {'message': 'Username debe ser valido y debe tener una longitud valida'}, 400,{'Content-Type': 'application/json'}
         if not sanitizacion(LONGMAXINPUT,password):
-            return {'message': 'Password debe ser valido y debe tener una longitud valida'}, 400
+            return {'message': 'Password debe ser valido y debe tener una longitud valida'}, 400,{'Content-Type': 'application/json'}
         
         logger.debug(f"POST request received at /usuarios/loginJWTROL with name: {username}")
 
         user = Usuario.query.filter_by(username=username).first()
         if not user or not check_password_hash(user.password, password):
             logger.error("Usuario o pass no validos")
-            return {'message': 'Username o password invalido'}, 401
+            return {'message': 'Username o password invalido'}, 401,{'Content-Type': 'application/json'}
         
         # Creo el objeto de payload que estara en el token
         user = UserObjectJWT(username=username, roles=[user.idRol])
         access_token = create_access_token(user)
         logger.debug(f"Usuario logueado: {username}")
 
-        return {'message': 'Usuario logeadojwtrol','access_token': access_token}, 200
+        return {'message': 'Usuario logeadojwtrol','access_token': access_token}, 200,{'Content-Type': 'application/json'}
       except:
           logger.error("ERROR received at /usuarios/loginJWTROL")
-          return {'message': 'Momentaneamente no disponible'}, 500
-#recurso protegido por jwt y rol admin
+          return {'message': 'Momentaneamente no disponible'}, 500,{'Content-Type': 'application/json'}
+
+#recurso protegido por jwt y rol admin, aqui iria pj registrar,modificar,borrar y obtener usuarios
 class ProtectedResourceJWTAdmin(Resource):
     @admin_required
     def get(self):
         current_user = get_jwt_identity()
-        return {'message': f'Hola, {current_user}'}, 200  
-#recurso protegido por jwt y rol gestor
+        return {'message': f'Acceso al rescurso permitido, {current_user}'}, 200,{'Content-Type': 'application/json'}  
+#recurso protegido por jwt y rol gestor, aqui iria pj obtenerVehiculos y registrarTarjeton
 class ProtectedResourceJWTGestor(Resource):
     @gestor_required
     def get(self):
         current_user = get_jwt_identity()
-        return {'message': f'Hola, {current_user}'}, 200  
-#recurso protegido por jwt y rol agente
+        return {'message': f'Acceso al rescurso permitido, {current_user}'}, 200,{'Content-Type': 'application/json'}  
+#recurso protegido por jwt y rol agente, aqui iria la funcion verificarTarjeton
 class ProtectedResourceJWTAgente(Resource):
     @agente_required
     def get(self):
         current_user = get_jwt_identity()
-        return {'message': f'Hola, {current_user}'}, 200  
+        return {'message': f'Acceso al rescurso permitido, {current_user}'}, 200,{'Content-Type': 'application/json'}  
 
 
 ###10 manejo de errores
@@ -436,7 +445,7 @@ class ErrorEmitido(Resource):
       try:        
         raise Exception("Sorry, no numbers below zero")
       except:
-          return {'message': 'Momentaneamente no disponible'}, 500
+          return {'message': 'Momentaneamente no disponible'}, 500,{'Content-Type': 'application/json'}
 
 
 
@@ -499,28 +508,6 @@ app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 def send_static(path):
     return send_from_directory('swagger', path)
 
-
-
-
-'''class Register(Resource):
-
-class Login(Resource):
-
-class ModificarUsuario(Resource):
-
-class BajaUsuario(Resource):
-
-class Roles(Resource):
-
-class Vehiculos(Resource):
-
-class GenerarTarjeton(Resource):
-
-class VerificarTarjeton(Resource):'''
-
-
-
-
 class ProtectedResource(Resource):
     #@cross_origin(origins='localhost:5000')
     def get(self):
@@ -537,11 +524,11 @@ def extended_page():
     resp = make_response(render_template('vehiculos.html'))
     #resp.headers.set('Cache-Control','no-store')
     #resp.headers.set('Server','')
-    return resp,200
+    return resp,200,{'Content-Type': 'text/html; charset=utf-8'}
     
 @app.route('/')
 def extended_page0():
-    return render_template('vehiculos.html'),200
+    return render_template('vehiculos.html'),200,{'Content-Type': 'text/html; charset=utf-8'}
     #return render_template('vehiculos.html'),200,{,  }
 @app.route('/vehiculos.css')
 def extended_page2():
@@ -559,20 +546,24 @@ def extended_page5():
 def extended_page6():
     return render_template('nav.js'),200,{'Content-Type': 'text/javascript; charset=utf-8'}
 
+#endpoint de prueba de seguridad para el cliente
 api.add_resource(ProtectedResource, '/v1/protected')
 api.add_resource(ProtectedResourceAPIKEY, '/v1/usuarios/protectedapikey')
 api.add_resource(Login, '/v1/usuarios/login')
-api.add_resource(Register, '/v1/usuarios/registrar')
 api.add_resource(GetApiKey, '/v1/usuarios/getApiKey')
 api.add_resource(LoginJWT, '/v1/usuarios/loginJWT')
 api.add_resource(ProtectedResourceJWT, '/v1/usuarios/protectedjwt')
-api.add_resource(LoginJWTROL, '/v1/usuarios/loginJWTROL')
 api.add_resource(ProtectedResourceJWTAdmin, '/v1/usuarios/protectedjwtroladmin')
 api.add_resource(ProtectedResourceJWTGestor, '/v1/usuarios/protectedjwtrolgestor')
 api.add_resource(ProtectedResourceJWTAgente, '/v1/usuarios/protectedjwtrolagente')
 api.add_resource(ErrorEmitido, '/v1/errorEmitido')
 api.add_resource(ErrorCors, '/v1/cors')
+
+#endpoint reales de la api
+api.add_resource(Register, '/v1/usuarios/registrar')
+api.add_resource(LoginJWTROL, '/v1/usuarios/loginJWTROL')
 api.add_resource(RegistrarTarjeton, '/v1/vehiculos/registrarTarjeton') 
+
 
 
 '''api.add_resource(Register, '/v1/usuarios/registrar')

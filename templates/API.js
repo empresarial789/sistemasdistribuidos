@@ -4,7 +4,6 @@ var API = {
 	endpoint1: "https://localhost:5000/v1/protected",
 	endpoint2:"https://localhost:5000/v1/usuarios/login",
 	endpoint4:"https://localhost:5000/v1/usuarios/loginJWT",
-	endpoint5:"https://localhost:5000/v1/vehiculos/registrarTarjeton",
 	endpoint6:"https://localhost:5000/v1/vehiculos/vehiculos/",
 	endpoint7:"https://localhost:5000/v1/inputvalidacion",
 	endpoint31:"https://localhost:5000//v1/usuarios/getApiKey",
@@ -22,6 +21,6 @@ var API = {
 	/*enpoints de la api de verdad, algunos se usaron en las pruebas*/
 	endpoint3: "https://localhost:5000/v1/usuarios/registrar",
 	endpoint9: "https://localhost:5000/v1/usuarios/loginJWTROL",
-	endpoint18:"http://localhost:5000/v1/tarjetones",
+	endpoint5: "https://localhost:5000/v1/vehiculos/registrarTarjeton",
 	
 };
